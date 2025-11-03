@@ -7,6 +7,10 @@ framework:
 
     #esi: true
     #fragments: true
+    serializer:
+        enabled: true
+        default_context:
+            groups: ['api']
 
 when@test:
     framework:
