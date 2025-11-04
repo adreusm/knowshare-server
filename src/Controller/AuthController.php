@@ -31,7 +31,7 @@ class AuthController extends AbstractController
 
     #[Route('/register', name: 'register', methods: ['POST'])]
     #[OA\Post(
-        path: '/api/auth/register',
+        path: '/api/v1/auth/register',
         summary: 'Register a new user',
         description: 'Creates a new user account and returns the user ID',
         requestBody: new OA\RequestBody(
@@ -92,6 +92,7 @@ class AuthController extends AbstractController
         );
 
         $errors = $this->validator->validate($registerRequest);
+
         if (count($errors) > 0) {
             $errorMessages = [];
             foreach ($errors as $error) {
@@ -116,7 +117,7 @@ class AuthController extends AbstractController
 
     #[Route('/login', name: 'login', methods: ['POST'])]
     #[OA\Post(
-        path: '/api/auth/login',
+        path: '/api/v1/auth/login',
         summary: 'Login user',
         description: 'Authenticates user and returns access token. Refresh token is set in HTTP-only cookie.',
         requestBody: new OA\RequestBody(
@@ -206,12 +207,14 @@ class AuthController extends AbstractController
     }
 
     #[Route('/refresh', name: 'refresh', methods: ['POST'])]
+
     #[OA\Post(
-        path: '/api/auth/refresh',
+        path: '/api/v1/auth/refresh',
         summary: 'Refresh access token',
         description: 'Refreshes the access token using refresh token from HTTP-only cookie',
         tags: ['Authentication']
     )]
+
     #[OA\Response(
         response: 200,
         description: 'Tokens successfully refreshed',
@@ -231,6 +234,7 @@ class AuthController extends AbstractController
             ]
         )
     )]
+
     #[OA\Response(
         response: 401,
         description: 'Invalid or expired refresh token, or refresh token not found in cookie',
@@ -240,6 +244,7 @@ class AuthController extends AbstractController
             ]
         )
     )]
+
     public function refresh(Request $request): JsonResponse
     {
         $refreshTokenValue = $request->cookies->get('refresh_token');
@@ -268,13 +273,15 @@ class AuthController extends AbstractController
     }
 
     #[Route('/me', name: 'me', methods: ['GET'])]
+
     #[OA\Get(
-        path: '/api/auth/me',
+        path: '/api/v1/auth/me',
         summary: 'Get current user information',
         description: 'Returns information about the currently authenticated user',
         security: [['bearer' => []]],
         tags: ['Authentication']
     )]
+
     #[OA\Response(
         response: 200,
         description: 'User information',
@@ -286,6 +293,7 @@ class AuthController extends AbstractController
             ]
         )
     )]
+
     #[OA\Response(
         response: 401,
         description: 'Unauthorized - Invalid or missing token',
@@ -295,6 +303,7 @@ class AuthController extends AbstractController
             ]
         )
     )]
+
     public function me(): JsonResponse
     {
         $user = $this->getUser();
@@ -324,7 +333,7 @@ class AuthController extends AbstractController
         $cookie = Cookie::create('refresh_token', $refreshTokenValue)
             ->withExpires($expiresAt)
             ->withHttpOnly(true)
-            ->withSecure(false) // Set to true in production with HTTPS
+            ->withSecure($this->getParameter('app.cookie.secure')) // false in development
             ->withSameSite(Cookie::SAMESITE_LAX)
             ->withPath('/');
 
