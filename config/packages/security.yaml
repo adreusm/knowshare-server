@@ -13,11 +13,15 @@ security:
             pattern: ^/(_(profiler|wdt)|css|images|js)/
             security: false
         api_auth:
-            pattern: ^/api/auth/(register|login|refresh)$
+            pattern: ^/api/v1/auth/(register|login|refresh)$
+            stateless: true
+            security: false
+        api_dock:
+            pattern: ^/api/v1/doc
             stateless: true
             security: false
         api:
-            pattern: ^/api
+            pattern: ^/api/v1
             stateless: true
             provider: app_user_provider
             jwt:
@@ -29,7 +33,7 @@ security:
     # Easy way to control access for large sections of your site
     # Note: Only the *first* access control that matches will be used
     access_control:
-        - { path: ^/api, roles: ROLE_USER }
+        - { path: ^/api/v1, roles: ROLE_USER }
 
 when@test:
     security:
