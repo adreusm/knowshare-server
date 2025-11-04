@@ -21,17 +21,14 @@ class AuthService implements AuthServiceInterface
 
     public function register(RegisterRequest $registerRequest): User
     {
-        // Check if user with this email already exists
         if ($this->userRepository->findOneBy(['email' => $registerRequest->email])) {
             throw new \RuntimeException('User with this email already exists');
         }
 
-        // Check if user with this username already exists
         if ($this->userRepository->findOneBy(['username' => $registerRequest->username])) {
             throw new \RuntimeException('User with this username already exists');
         }
 
-        // Create new user
         $user = new User();
         $user->setUsername($registerRequest->username);
         $user->setEmail($registerRequest->email);

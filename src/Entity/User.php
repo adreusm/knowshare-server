@@ -123,10 +123,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function eraseCredentials(): void
     {
-        // If you store any temporary, sensitive data on the user, clear it here
+        
     }
 
-    // PasswordAuthenticatedUserInterface implementation
     public function getPassword(): string
     {
         return (string) $this->password_hash;

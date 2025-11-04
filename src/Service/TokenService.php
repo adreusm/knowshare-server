@@ -20,7 +20,6 @@ class TokenService implements TokenServiceInterface
 
     public function generateRefreshToken(User $user): string
     {
-        // Generate a secure random token
         return bin2hex(random_bytes(32));
     }
 }

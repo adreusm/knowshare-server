@@ -10,7 +10,7 @@ use Doctrine\ORM\EntityManagerInterface;
 
 class RefreshTokenService implements RefreshTokenServiceInterface
 {
-    private const REFRESH_TOKEN_LIFETIME = '+30 days'; // 30 days
+    private const REFRESH_TOKEN_LIFETIME = '+30 days';
 
     public function __construct(
         private RefreshTokenRepository $refreshTokenRepository,
