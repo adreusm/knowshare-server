@@ -6,6 +6,7 @@ use App\DTO\CreateDomainRequest;
 use App\DTO\UpdateDomainRequest;
 use App\Entity\Domain;
 use App\Entity\User;
+use App\Helper\PaginationHelper;
 use App\Interface\DomainServiceInterface;
 use App\Repository\DomainRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -58,6 +59,12 @@ class DomainService implements DomainServiceInterface
     public function getUserDomains(User $user): array
     {
         return $this->domainRepository->findByUser($user);
+    }
+
+    public function getUserDomainsPaginated(User $user, int $page = 1, int $limit = 20): array
+    {
+        $query = $this->domainRepository->findByUserQuery($user);
+        return PaginationHelper::paginate($query, $page, $limit);
     }
 
     public function getDomainById(User $user, int $id): ?Domain

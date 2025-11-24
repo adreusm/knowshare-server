@@ -18,9 +18,21 @@ interface SubscriptionServiceInterface
     public function getSubscribedAuthors(User $subscriber): array;
 
     /**
+     * Get paginated subscribed authors
+     * @return array{items: User[], pagination: array{page: int, limit: int, total: int, total_pages: int}}
+     */
+    public function getSubscribedAuthorsPaginated(User $subscriber, int $page = 1, int $limit = 20): array;
+
+    /**
      * @return User[]
      */
     public function getSubscribers(User $author): array;
+
+    /**
+     * Get paginated subscribers
+     * @return array{items: User[], pagination: array{page: int, limit: int, total: int, total_pages: int}}
+     */
+    public function getSubscribersPaginated(User $author, int $page = 1, int $limit = 20): array;
 }
 
 

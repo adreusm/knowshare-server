@@ -29,39 +29,68 @@ class TagController extends AbstractController
     #[OA\Get(
         path: '/api/v1/tags',
         summary: 'Get all tags for current user',
-        description: 'Returns a list of all tags created by the authenticated user',
+        description: 'Returns a paginated list of all tags created by the authenticated user',
         security: [['bearer' => []]],
         tags: ['Tags']
     )]
+    #[OA\Parameter(
+        name: 'page',
+        in: 'query',
+        schema: new OA\Schema(type: 'integer', default: 1, minimum: 1),
+        description: 'Page number'
+    )]
+    #[OA\Parameter(
+        name: 'limit',
+        in: 'query',
+        schema: new OA\Schema(type: 'integer', default: 20, minimum: 1, maximum: 100),
+        description: 'Number of items per page'
+    )]
     #[OA\Response(
         response: 200,
-        description: 'List of tags',
+        description: 'Paginated list of tags',
         content: new OA\JsonContent(
-            type: 'array',
-            items: new OA\Items(
-                properties: [
-                    new OA\Property(property: 'id', type: 'integer', example: 1),
-                    new OA\Property(property: 'name', type: 'string', example: 'Grammar'),
-                    new OA\Property(property: 'created_at', type: 'string', format: 'date-time'),
-                ]
-            )
+            properties: [
+                new OA\Property(property: 'data', type: 'array',
+                    items: new OA\Items(
+                        properties: [
+                            new OA\Property(property: 'id', type: 'integer', example: 1),
+                            new OA\Property(property: 'name', type: 'string', example: 'Grammar'),
+                            new OA\Property(property: 'created_at', type: 'string', format: 'date-time'),
+                        ]
+                    )
+                ),
+                new OA\Property(property: 'pagination', type: 'object',
+                    properties: [
+                        new OA\Property(property: 'page', type: 'integer'),
+                        new OA\Property(property: 'limit', type: 'integer'),
+                        new OA\Property(property: 'total', type: 'integer'),
+                        new OA\Property(property: 'total_pages', type: 'integer'),
+                    ]
+                ),
+            ]
         )
     )]
-    public function list(): JsonResponse
+    public function list(Request $request): JsonResponse
     {
         $user = $this->getUser();
         if (!$user instanceof User) {
             return new JsonResponse(['error' => 'Unauthorized'], Response::HTTP_UNAUTHORIZED);
         }
 
-        $tags = $this->tagService->getUserTags($user);
+        $page = max(1, (int) ($request->query->get('page') ?? 1));
+        $limit = max(1, min(100, (int) ($request->query->get('limit') ?? 20)));
+
+        $result = $this->tagService->getUserTagsPaginated($user, $page, $limit);
         $data = array_map(fn(Tag $tag) => [
             'id' => $tag->getId(),
             'name' => $tag->getName(),
             'created_at' => $tag->getCreatedAt()?->format('c'),
-        ], $tags);
+        ], $result['items']);
 
-        return new JsonResponse($data);
+        return new JsonResponse([
+            'data' => $data,
+            'pagination' => $result['pagination'],
+        ]);
     }
 
     #[Route('', name: 'create', methods: ['POST'])]

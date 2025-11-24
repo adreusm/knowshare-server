@@ -20,6 +20,12 @@ interface DomainServiceInterface
      */
     public function getUserDomains(User $user): array;
 
+    /**
+     * Get paginated user domains
+     * @return array{items: Domain[], pagination: array{page: int, limit: int, total: int, total_pages: int}}
+     */
+    public function getUserDomainsPaginated(User $user, int $page = 1, int $limit = 20): array;
+
     public function getDomainById(User $user, int $id): ?Domain;
 }
 

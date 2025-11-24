@@ -6,6 +6,7 @@ use App\DTO\CreateTagRequest;
 use App\DTO\UpdateTagRequest;
 use App\Entity\Tag;
 use App\Entity\User;
+use App\Helper\PaginationHelper;
 use App\Interface\TagServiceInterface;
 use App\Repository\TagRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -61,6 +62,12 @@ class TagService implements TagServiceInterface
     public function getUserTags(User $user): array
     {
         return $this->tagRepository->findByUser($user);
+    }
+
+    public function getUserTagsPaginated(User $user, int $page = 1, int $limit = 20): array
+    {
+        $query = $this->tagRepository->findByUserQuery($user);
+        return PaginationHelper::paginate($query, $page, $limit);
     }
 
     public function getTagById(User $user, int $id): ?Tag

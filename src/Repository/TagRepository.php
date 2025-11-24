@@ -5,6 +5,7 @@ namespace App\Repository;
 use App\Entity\Tag;
 use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\Query;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
@@ -29,6 +30,18 @@ class TagRepository extends ServiceEntityRepository
             ->orderBy('t.created_at', 'DESC')
             ->getQuery()
             ->getResult();
+    }
+
+    /**
+     * Get query for paginated user tags
+     */
+    public function findByUserQuery(User $user): Query
+    {
+        return $this->createQueryBuilder('t')
+            ->andWhere('t.user = :user')
+            ->setParameter('user', $user)
+            ->orderBy('t.created_at', 'DESC')
+            ->getQuery();
     }
 
     /**

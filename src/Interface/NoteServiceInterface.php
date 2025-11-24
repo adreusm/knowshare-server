@@ -21,14 +21,32 @@ interface NoteServiceInterface
     public function getUserNotes(User $user): array;
 
     /**
+     * Get paginated user notes
+     * @return array{items: Note[], pagination: array{page: int, limit: int, total: int, total_pages: int}}
+     */
+    public function getUserNotesPaginated(User $user, int $page = 1, int $limit = 20): array;
+
+    /**
      * @return Note[]
      */
     public function getPublicFeed(int $limit = 50, int $offset = 0): array;
 
     /**
+     * Get paginated public feed
+     * @return array{items: Note[], pagination: array{page: int, limit: int, total: int, total_pages: int}}
+     */
+    public function getPublicFeedPaginated(int $page = 1, int $limit = 20): array;
+
+    /**
      * @return Note[]
      */
     public function getSubscriberFeed(User $user, int $limit = 50, int $offset = 0): array;
+
+    /**
+     * Get paginated subscriber feed
+     * @return array{items: Note[], pagination: array{page: int, limit: int, total: int, total_pages: int}}
+     */
+    public function getSubscriberFeedPaginated(User $user, int $page = 1, int $limit = 20): array;
 
     /**
      * @return Note[]

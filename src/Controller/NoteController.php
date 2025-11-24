@@ -29,162 +29,214 @@ class NoteController extends AbstractController
     #[OA\Get(
         path: '/api/v1/notes',
         summary: 'Get all notes for current user',
-        description: 'Returns a list of all notes created by the authenticated user',
+        description: 'Returns a paginated list of notes created by the authenticated user',
         security: [['bearer' => []]],
         tags: ['Notes']
     )]
+    #[OA\Parameter(
+        name: 'page',
+        in: 'query',
+        schema: new OA\Schema(type: 'integer', default: 1, minimum: 1),
+        description: 'Page number'
+    )]
+    #[OA\Parameter(
+        name: 'limit',
+        in: 'query',
+        schema: new OA\Schema(type: 'integer', default: 20, minimum: 1, maximum: 100),
+        description: 'Number of items per page'
+    )]
     #[OA\Response(
         response: 200,
-        description: 'List of notes',
-        content: new OA\JsonContent(type: 'array', items: new OA\Items(
+        description: 'Paginated list of notes',
+        content: new OA\JsonContent(
             properties: [
-                new OA\Property(property: 'id', type: 'integer'),
-                new OA\Property(property: 'domain_id', type: 'integer'),
-                new OA\Property(property: 'domain_name', type: 'string'),
-                new OA\Property(property: 'title', type: 'string'),
-                new OA\Property(property: 'content', type: 'string'),
-                new OA\Property(property: 'access_type', type: 'string'),
-                new OA\Property(property: 'tags', type: 'array', items: new OA\Items(
+                new OA\Property(property: 'data', type: 'array', items: new OA\Items(
                     properties: [
                         new OA\Property(property: 'id', type: 'integer'),
-                        new OA\Property(property: 'name', type: 'string'),
+                        new OA\Property(property: 'domain_id', type: 'integer'),
+                        new OA\Property(property: 'domain_name', type: 'string'),
+                        new OA\Property(property: 'title', type: 'string'),
+                        new OA\Property(property: 'content', type: 'string'),
+                        new OA\Property(property: 'access_type', type: 'string'),
+                        new OA\Property(property: 'tags', type: 'array', items: new OA\Items(
+                            properties: [
+                                new OA\Property(property: 'id', type: 'integer'),
+                                new OA\Property(property: 'name', type: 'string'),
+                            ]
+                        )),
+                        new OA\Property(property: 'created_at', type: 'string', format: 'date-time'),
+                        new OA\Property(property: 'updated_at', type: 'string', format: 'date-time'),
+                        new OA\Property(property: 'author', type: 'object',
+                            properties: [
+                                new OA\Property(property: 'id', type: 'integer'),
+                                new OA\Property(property: 'username', type: 'string'),
+                            ]
+                        ),
                     ]
                 )),
-                new OA\Property(property: 'created_at', type: 'string', format: 'date-time'),
-                new OA\Property(property: 'updated_at', type: 'string', format: 'date-time'),
-                new OA\Property(property: 'author', type: 'object',
+                new OA\Property(property: 'pagination', type: 'object',
                     properties: [
-                        new OA\Property(property: 'id', type: 'integer'),
-                        new OA\Property(property: 'username', type: 'string'),
+                        new OA\Property(property: 'page', type: 'integer'),
+                        new OA\Property(property: 'limit', type: 'integer'),
+                        new OA\Property(property: 'total', type: 'integer'),
+                        new OA\Property(property: 'total_pages', type: 'integer'),
                     ]
                 ),
             ]
-        ))
+        )
     )]
-    public function list(): JsonResponse
+    public function list(Request $request): JsonResponse
     {
         $user = $this->getUser();
         if (!$user instanceof User) {
             return new JsonResponse(['error' => 'Unauthorized'], Response::HTTP_UNAUTHORIZED);
         }
 
-        $notes = $this->noteService->getUserNotes($user);
-        $data = array_map(fn(Note $note) => $this->serializeNote($note), $notes);
+        $page = max(1, (int) ($request->query->get('page') ?? 1));
+        $limit = max(1, min(100, (int) ($request->query->get('limit') ?? 20)));
 
-        return new JsonResponse($data);
+        $result = $this->noteService->getUserNotesPaginated($user, $page, $limit);
+        $data = array_map(fn(Note $note) => $this->serializeNote($note), $result['items']);
+
+        return new JsonResponse([
+            'data' => $data,
+            'pagination' => $result['pagination'],
+        ]);
     }
 
     #[Route('/feed', name: 'public_feed', methods: ['GET'])]
     #[OA\Get(
         path: '/api/v1/notes/feed',
         summary: 'Get public feed',
-        description: 'Returns a feed of public notes from all users',
-        security: [['bearer' => []]],
+        description: 'Returns a paginated feed of public notes from all users. This endpoint is publicly accessible and does not require authentication.',
         tags: ['Notes']
+    )]
+    #[OA\Parameter(
+        name: 'page',
+        in: 'query',
+        schema: new OA\Schema(type: 'integer', default: 1, minimum: 1),
+        description: 'Page number'
     )]
     #[OA\Parameter(
         name: 'limit',
         in: 'query',
-        schema: new OA\Schema(type: 'integer', default: 50),
-        description: 'Number of notes to return'
-    )]
-    #[OA\Parameter(
-        name: 'offset',
-        in: 'query',
-        schema: new OA\Schema(type: 'integer', default: 0),
-        description: 'Number of notes to skip'
+        schema: new OA\Schema(type: 'integer', default: 20, minimum: 1, maximum: 100),
+        description: 'Number of items per page'
     )]
     #[OA\Response(
         response: 200,
-        description: 'List of public notes',
-        content: new OA\JsonContent(type: 'array', items: new OA\Items(
+        description: 'Paginated list of public notes',
+        content: new OA\JsonContent(
             properties: [
-                new OA\Property(property: 'id', type: 'integer'),
-                new OA\Property(property: 'domain_id', type: 'integer'),
-                new OA\Property(property: 'domain_name', type: 'string'),
-                new OA\Property(property: 'title', type: 'string'),
-                new OA\Property(property: 'content', type: 'string'),
-                new OA\Property(property: 'access_type', type: 'string'),
-                new OA\Property(property: 'tags', type: 'array', items: new OA\Items(
+                new OA\Property(property: 'data', type: 'array', items: new OA\Items(
                     properties: [
                         new OA\Property(property: 'id', type: 'integer'),
-                        new OA\Property(property: 'name', type: 'string'),
+                        new OA\Property(property: 'domain_id', type: 'integer'),
+                        new OA\Property(property: 'domain_name', type: 'string'),
+                        new OA\Property(property: 'title', type: 'string'),
+                        new OA\Property(property: 'content', type: 'string'),
+                        new OA\Property(property: 'access_type', type: 'string'),
+                        new OA\Property(property: 'tags', type: 'array', items: new OA\Items(
+                            properties: [
+                                new OA\Property(property: 'id', type: 'integer'),
+                                new OA\Property(property: 'name', type: 'string'),
+                            ]
+                        )),
+                        new OA\Property(property: 'created_at', type: 'string', format: 'date-time'),
+                        new OA\Property(property: 'updated_at', type: 'string', format: 'date-time'),
+                        new OA\Property(property: 'author', type: 'object',
+                            properties: [
+                                new OA\Property(property: 'id', type: 'integer'),
+                                new OA\Property(property: 'username', type: 'string'),
+                            ]
+                        ),
                     ]
                 )),
-                new OA\Property(property: 'created_at', type: 'string', format: 'date-time'),
-                new OA\Property(property: 'updated_at', type: 'string', format: 'date-time'),
-                new OA\Property(property: 'author', type: 'object',
+                new OA\Property(property: 'pagination', type: 'object',
                     properties: [
-                        new OA\Property(property: 'id', type: 'integer'),
-                        new OA\Property(property: 'username', type: 'string'),
+                        new OA\Property(property: 'page', type: 'integer'),
+                        new OA\Property(property: 'limit', type: 'integer'),
+                        new OA\Property(property: 'total', type: 'integer'),
+                        new OA\Property(property: 'total_pages', type: 'integer'),
                     ]
                 ),
             ]
-        ))
+        )
     )]
     public function publicFeed(Request $request): JsonResponse
     {
-        $user = $this->getUser();
-        if (!$user instanceof User) {
-            return new JsonResponse(['error' => 'Unauthorized'], Response::HTTP_UNAUTHORIZED);
-        }
+        // Public feed is accessible without authentication
+        $page = max(1, (int) ($request->query->get('page') ?? 1));
+        $limit = max(1, min(100, (int) ($request->query->get('limit') ?? 20)));
 
-        $limit = (int) ($request->query->get('limit') ?? 50);
-        $offset = (int) ($request->query->get('offset') ?? 0);
+        $result = $this->noteService->getPublicFeedPaginated($page, $limit);
+        $data = array_map(fn(Note $note) => $this->serializeNote($note), $result['items']);
 
-        $notes = $this->noteService->getPublicFeed($limit, $offset);
-        $data = array_map(fn(Note $note) => $this->serializeNote($note), $notes);
-
-        return new JsonResponse($data);
+        return new JsonResponse([
+            'data' => $data,
+            'pagination' => $result['pagination'],
+        ]);
     }
 
     #[Route('/feed/subscribers', name: 'subscriber_feed', methods: ['GET'])]
     #[OA\Get(
         path: '/api/v1/notes/feed/subscribers',
         summary: 'Get subscriber feed',
-        description: 'Returns a feed of subscriber-only notes from authors the user is subscribed to',
+        description: 'Returns a paginated feed of subscriber-only notes from authors the user is subscribed to',
         security: [['bearer' => []]],
         tags: ['Notes']
     )]
     #[OA\Parameter(
-        name: 'limit',
+        name: 'page',
         in: 'query',
-        schema: new OA\Schema(type: 'integer', default: 50),
-        description: 'Number of notes to return'
+        schema: new OA\Schema(type: 'integer', default: 1, minimum: 1),
+        description: 'Page number'
     )]
     #[OA\Parameter(
-        name: 'offset',
+        name: 'limit',
         in: 'query',
-        schema: new OA\Schema(type: 'integer', default: 0),
-        description: 'Number of notes to skip'
+        schema: new OA\Schema(type: 'integer', default: 20, minimum: 1, maximum: 100),
+        description: 'Number of items per page'
     )]
     #[OA\Response(
         response: 200,
-        description: 'List of subscriber-only notes',
-        content: new OA\JsonContent(type: 'array', items: new OA\Items(
+        description: 'Paginated list of subscriber-only notes',
+        content: new OA\JsonContent(
             properties: [
-                new OA\Property(property: 'id', type: 'integer'),
-                new OA\Property(property: 'domain_id', type: 'integer'),
-                new OA\Property(property: 'domain_name', type: 'string'),
-                new OA\Property(property: 'title', type: 'string'),
-                new OA\Property(property: 'content', type: 'string'),
-                new OA\Property(property: 'access_type', type: 'string'),
-                new OA\Property(property: 'tags', type: 'array', items: new OA\Items(
+                new OA\Property(property: 'data', type: 'array', items: new OA\Items(
                     properties: [
                         new OA\Property(property: 'id', type: 'integer'),
-                        new OA\Property(property: 'name', type: 'string'),
+                        new OA\Property(property: 'domain_id', type: 'integer'),
+                        new OA\Property(property: 'domain_name', type: 'string'),
+                        new OA\Property(property: 'title', type: 'string'),
+                        new OA\Property(property: 'content', type: 'string'),
+                        new OA\Property(property: 'access_type', type: 'string'),
+                        new OA\Property(property: 'tags', type: 'array', items: new OA\Items(
+                            properties: [
+                                new OA\Property(property: 'id', type: 'integer'),
+                                new OA\Property(property: 'name', type: 'string'),
+                            ]
+                        )),
+                        new OA\Property(property: 'created_at', type: 'string', format: 'date-time'),
+                        new OA\Property(property: 'updated_at', type: 'string', format: 'date-time'),
+                        new OA\Property(property: 'author', type: 'object',
+                            properties: [
+                                new OA\Property(property: 'id', type: 'integer'),
+                                new OA\Property(property: 'username', type: 'string'),
+                            ]
+                        ),
                     ]
                 )),
-                new OA\Property(property: 'created_at', type: 'string', format: 'date-time'),
-                new OA\Property(property: 'updated_at', type: 'string', format: 'date-time'),
-                new OA\Property(property: 'author', type: 'object',
+                new OA\Property(property: 'pagination', type: 'object',
                     properties: [
-                        new OA\Property(property: 'id', type: 'integer'),
-                        new OA\Property(property: 'username', type: 'string'),
+                        new OA\Property(property: 'page', type: 'integer'),
+                        new OA\Property(property: 'limit', type: 'integer'),
+                        new OA\Property(property: 'total', type: 'integer'),
+                        new OA\Property(property: 'total_pages', type: 'integer'),
                     ]
                 ),
             ]
-        ))
+        )
     )]
     public function subscriberFeed(Request $request): JsonResponse
     {
@@ -193,13 +245,16 @@ class NoteController extends AbstractController
             return new JsonResponse(['error' => 'Unauthorized'], Response::HTTP_UNAUTHORIZED);
         }
 
-        $limit = (int) ($request->query->get('limit') ?? 50);
-        $offset = (int) ($request->query->get('offset') ?? 0);
+        $page = max(1, (int) ($request->query->get('page') ?? 1));
+        $limit = max(1, min(100, (int) ($request->query->get('limit') ?? 20)));
 
-        $notes = $this->noteService->getSubscriberFeed($user, $limit, $offset);
-        $data = array_map(fn(Note $note) => $this->serializeNote($note), $notes);
+        $result = $this->noteService->getSubscriberFeedPaginated($user, $page, $limit);
+        $data = array_map(fn(Note $note) => $this->serializeNote($note), $result['items']);
 
-        return new JsonResponse($data);
+        return new JsonResponse([
+            'data' => $data,
+            'pagination' => $result['pagination'],
+        ]);
     }
 
     #[Route('', name: 'create', methods: ['POST'])]

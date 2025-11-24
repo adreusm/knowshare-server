@@ -4,6 +4,7 @@ namespace App\Service;
 
 use App\Entity\Subscription;
 use App\Entity\User;
+use App\Helper\PaginationHelper;
 use App\Interface\SubscriptionServiceInterface;
 use App\Repository\SubscriptionRepository;
 use App\Repository\UserRepository;
@@ -66,6 +67,12 @@ class SubscriptionService implements SubscriptionServiceInterface
         return $authors;
     }
 
+    public function getSubscribedAuthorsPaginated(User $subscriber, int $page = 1, int $limit = 20): array
+    {
+        $query = $this->subscriptionRepository->findSubscribedAuthorsQuery($subscriber);
+        return PaginationHelper::paginate($query, $page, $limit);
+    }
+
     public function getSubscribers(User $author): array
     {
         $subscriberIds = $this->subscriptionRepository->findSubscribers($author);
@@ -78,6 +85,12 @@ class SubscriptionService implements SubscriptionServiceInterface
             }
         }
         return $subscribers;
+    }
+
+    public function getSubscribersPaginated(User $author, int $page = 1, int $limit = 20): array
+    {
+        $query = $this->subscriptionRepository->findSubscribersQuery($author);
+        return PaginationHelper::paginate($query, $page, $limit);
     }
 }
 

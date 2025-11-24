@@ -5,6 +5,7 @@ namespace App\Repository;
 use App\Entity\Note;
 use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\Query;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
@@ -29,6 +30,18 @@ class NoteRepository extends ServiceEntityRepository
             ->orderBy('n.created_at', 'DESC')
             ->getQuery()
             ->getResult();
+    }
+
+    /**
+     * Get query for paginated user notes
+     */
+    public function findByUserQuery(User $user): Query
+    {
+        return $this->createQueryBuilder('n')
+            ->andWhere('n.user = :user')
+            ->setParameter('user', $user)
+            ->orderBy('n.created_at', 'DESC')
+            ->getQuery();
     }
 
     /**
@@ -62,6 +75,18 @@ class NoteRepository extends ServiceEntityRepository
     }
 
     /**
+     * Get query for paginated public notes
+     */
+    public function findPublicNotesQuery(): Query
+    {
+        return $this->createQueryBuilder('n')
+            ->andWhere('n.access_type = :accessType')
+            ->setParameter('accessType', 'public')
+            ->orderBy('n.created_at', 'DESC')
+            ->getQuery();
+    }
+
+    /**
      * Find subscriber-only notes for a specific subscriber
      * @return Note[]
      */
@@ -78,6 +103,21 @@ class NoteRepository extends ServiceEntityRepository
             ->setFirstResult($offset)
             ->getQuery()
             ->getResult();
+    }
+
+    /**
+     * Get query for paginated subscriber notes
+     */
+    public function findSubscriberNotesQuery(User $subscriber): Query
+    {
+        return $this->createQueryBuilder('n')
+            ->innerJoin('App\Entity\Subscription', 's', 'WITH', 's.author = n.user')
+            ->andWhere('s.subscriber = :subscriber')
+            ->andWhere('n.access_type = :accessType')
+            ->setParameter('subscriber', $subscriber)
+            ->setParameter('accessType', 'subscribers')
+            ->orderBy('n.created_at', 'DESC')
+            ->getQuery();
     }
 
     /**

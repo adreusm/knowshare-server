@@ -9,6 +9,7 @@ use App\Entity\Note;
 use App\Entity\NoteTag;
 use App\Entity\Tag;
 use App\Entity\User;
+use App\Helper\PaginationHelper;
 use App\Interface\NoteServiceInterface;
 use App\Repository\DomainRepository;
 use App\Repository\NoteRepository;
@@ -103,14 +104,32 @@ class NoteService implements NoteServiceInterface
         return $this->noteRepository->findByUser($user);
     }
 
+    public function getUserNotesPaginated(User $user, int $page = 1, int $limit = 20): array
+    {
+        $query = $this->noteRepository->findByUserQuery($user);
+        return PaginationHelper::paginate($query, $page, $limit);
+    }
+
     public function getPublicFeed(int $limit = 50, int $offset = 0): array
     {
         return $this->noteRepository->findPublicNotes($limit, $offset);
     }
 
+    public function getPublicFeedPaginated(int $page = 1, int $limit = 20): array
+    {
+        $query = $this->noteRepository->findPublicNotesQuery();
+        return PaginationHelper::paginate($query, $page, $limit);
+    }
+
     public function getSubscriberFeed(User $user, int $limit = 50, int $offset = 0): array
     {
         return $this->noteRepository->findSubscriberNotes($user, $limit, $offset);
+    }
+
+    public function getSubscriberFeedPaginated(User $user, int $page = 1, int $limit = 20): array
+    {
+        $query = $this->noteRepository->findSubscriberNotesQuery($user);
+        return PaginationHelper::paginate($query, $page, $limit);
     }
 
     public function getNotesByDomain(User $user, int $domainId): array

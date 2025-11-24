@@ -16,6 +16,10 @@ security:
             pattern: ^/api/v1/auth/(register|login|refresh)$
             stateless: true
             security: false
+        api_public_feed:
+            pattern: ^/api/v1/notes/feed$
+            stateless: true
+            security: false
         api_dock:
             pattern: ^/api/v1/doc
             stateless: true

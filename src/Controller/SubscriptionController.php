@@ -29,78 +29,136 @@ class SubscriptionController extends AbstractController
     #[OA\Get(
         path: '/api/v1/subscriptions/authors',
         summary: 'Get subscribed authors',
-        description: 'Returns a list of authors the current user is subscribed to',
+        description: 'Returns a paginated list of authors the current user is subscribed to',
         security: [['bearer' => []]],
         tags: ['Subscriptions']
     )]
+    #[OA\Parameter(
+        name: 'page',
+        in: 'query',
+        schema: new OA\Schema(type: 'integer', default: 1, minimum: 1),
+        description: 'Page number'
+    )]
+    #[OA\Parameter(
+        name: 'limit',
+        in: 'query',
+        schema: new OA\Schema(type: 'integer', default: 20, minimum: 1, maximum: 100),
+        description: 'Number of items per page'
+    )]
     #[OA\Response(
         response: 200,
-        description: 'List of subscribed authors',
+        description: 'Paginated list of subscribed authors',
         content: new OA\JsonContent(
-            type: 'array',
-            items: new OA\Items(
-                properties: [
-                    new OA\Property(property: 'id', type: 'integer', example: 1),
-                    new OA\Property(property: 'username', type: 'string', example: 'johndoe'),
-                    new OA\Property(property: 'email', type: 'string', format: 'email', example: 'john@example.com'),
-                ]
-            )
+            properties: [
+                new OA\Property(property: 'data', type: 'array',
+                    items: new OA\Items(
+                        properties: [
+                            new OA\Property(property: 'id', type: 'integer', example: 1),
+                            new OA\Property(property: 'username', type: 'string', example: 'johndoe'),
+                            new OA\Property(property: 'email', type: 'string', format: 'email', example: 'john@example.com'),
+                        ]
+                    )
+                ),
+                new OA\Property(property: 'pagination', type: 'object',
+                    properties: [
+                        new OA\Property(property: 'page', type: 'integer'),
+                        new OA\Property(property: 'limit', type: 'integer'),
+                        new OA\Property(property: 'total', type: 'integer'),
+                        new OA\Property(property: 'total_pages', type: 'integer'),
+                    ]
+                ),
+            ]
         )
     )]
-    public function subscribedAuthors(): JsonResponse
+    public function subscribedAuthors(Request $request): JsonResponse
     {
         $user = $this->getUser();
         if (!$user instanceof User) {
             return new JsonResponse(['error' => 'Unauthorized'], Response::HTTP_UNAUTHORIZED);
         }
 
-        $authors = $this->subscriptionService->getSubscribedAuthors($user);
+        $page = max(1, (int) ($request->query->get('page') ?? 1));
+        $limit = max(1, min(100, (int) ($request->query->get('limit') ?? 20)));
+
+        $result = $this->subscriptionService->getSubscribedAuthorsPaginated($user, $page, $limit);
         $data = array_map(fn(User $author) => [
             'id' => $author->getId(),
             'username' => $author->getUsername(),
             'email' => $author->getEmail(),
-        ], $authors);
+        ], $result['items']);
 
-        return new JsonResponse($data);
+        return new JsonResponse([
+            'data' => $data,
+            'pagination' => $result['pagination'],
+        ]);
     }
 
     #[Route('/subscribers', name: 'subscribers', methods: ['GET'])]
     #[OA\Get(
         path: '/api/v1/subscriptions/subscribers',
         summary: 'Get subscribers',
-        description: 'Returns a list of users subscribed to the current user',
+        description: 'Returns a paginated list of users subscribed to the current user',
         security: [['bearer' => []]],
         tags: ['Subscriptions']
     )]
+    #[OA\Parameter(
+        name: 'page',
+        in: 'query',
+        schema: new OA\Schema(type: 'integer', default: 1, minimum: 1),
+        description: 'Page number'
+    )]
+    #[OA\Parameter(
+        name: 'limit',
+        in: 'query',
+        schema: new OA\Schema(type: 'integer', default: 20, minimum: 1, maximum: 100),
+        description: 'Number of items per page'
+    )]
     #[OA\Response(
         response: 200,
-        description: 'List of subscribers',
+        description: 'Paginated list of subscribers',
         content: new OA\JsonContent(
-            type: 'array',
-            items: new OA\Items(
-                properties: [
-                    new OA\Property(property: 'id', type: 'integer', example: 1),
-                    new OA\Property(property: 'username', type: 'string', example: 'johndoe'),
-                    new OA\Property(property: 'email', type: 'string', format: 'email', example: 'john@example.com'),
-                ]
-            )
+            properties: [
+                new OA\Property(property: 'data', type: 'array',
+                    items: new OA\Items(
+                        properties: [
+                            new OA\Property(property: 'id', type: 'integer', example: 1),
+                            new OA\Property(property: 'username', type: 'string', example: 'johndoe'),
+                            new OA\Property(property: 'email', type: 'string', format: 'email', example: 'john@example.com'),
+                        ]
+                    )
+                ),
+                new OA\Property(property: 'pagination', type: 'object',
+                    properties: [
+                        new OA\Property(property: 'page', type: 'integer'),
+                        new OA\Property(property: 'limit', type: 'integer'),
+                        new OA\Property(property: 'total', type: 'integer'),
+                        new OA\Property(property: 'total_pages', type: 'integer'),
+                    ]
+                ),
+            ]
         )
     )]
-    public function subscribers(): JsonResponse
+    public function subscribers(Request $request): JsonResponse
     {
         $user = $this->getUser();
         if (!$user instanceof User) {
             return new JsonResponse(['error' => 'Unauthorized'], Response::HTTP_UNAUTHORIZED);
         }
 
-        $subscribers = $this->subscriptionService->getSubscribers($user);
+        $page = max(1, (int) ($request->query->get('page') ?? 1));
+        $limit = max(1, min(100, (int) ($request->query->get('limit') ?? 20)));
+
+        $result = $this->subscriptionService->getSubscribersPaginated($user, $page, $limit);
         $data = array_map(fn(User $subscriber) => [
             'id' => $subscriber->getId(),
             'username' => $subscriber->getUsername(),
             'email' => $subscriber->getEmail(),
-        ], $subscribers);
+        ], $result['items']);
 
-        return new JsonResponse($data);
+        return new JsonResponse([
+            'data' => $data,
+            'pagination' => $result['pagination'],
+        ]);
     }
 
     #[Route('', name: 'subscribe', methods: ['POST'])]

@@ -5,6 +5,7 @@ namespace App\Repository;
 use App\Entity\Subscription;
 use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\Query;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
@@ -72,6 +73,34 @@ class SubscriptionRepository extends ServiceEntityRepository
             ->setParameter('author', $author)
             ->getQuery()
             ->getResult();
+    }
+
+    /**
+     * Get query for paginated subscribed authors
+     */
+    public function findSubscribedAuthorsQuery(User $subscriber): Query
+    {
+        return $this->createQueryBuilder('s')
+            ->select('u')
+            ->innerJoin('s.author', 'u')
+            ->andWhere('s.subscriber = :subscriber')
+            ->setParameter('subscriber', $subscriber)
+            ->orderBy('u.id', 'ASC')
+            ->getQuery();
+    }
+
+    /**
+     * Get query for paginated subscribers
+     */
+    public function findSubscribersQuery(User $author): Query
+    {
+        return $this->createQueryBuilder('s')
+            ->select('u')
+            ->innerJoin('s.subscriber', 'u')
+            ->andWhere('s.author = :author')
+            ->setParameter('author', $author)
+            ->orderBy('u.id', 'ASC')
+            ->getQuery();
     }
 }
 
