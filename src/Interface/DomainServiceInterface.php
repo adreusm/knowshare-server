@@ -23,3 +23,5 @@ interface DomainServiceInterface
     public function getDomainById(User $user, int $id): ?Domain;
 }
 
+
+
