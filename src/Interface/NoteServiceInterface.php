@@ -22,9 +22,10 @@ interface NoteServiceInterface
 
     /**
      * Get paginated user notes
+     * @param array<string, mixed> $filters
      * @return array{items: Note[], pagination: array{page: int, limit: int, total: int, total_pages: int}}
      */
-    public function getUserNotesPaginated(User $user, int $page = 1, int $limit = 20): array;
+    public function getUserNotesPaginated(User $user, int $page = 1, int $limit = 20, array $filters = [], ?string $sort = null): array;
 
     /**
      * @return Note[]
@@ -33,9 +34,10 @@ interface NoteServiceInterface
 
     /**
      * Get paginated public feed
+     * @param array<string, mixed> $filters
      * @return array{items: Note[], pagination: array{page: int, limit: int, total: int, total_pages: int}}
      */
-    public function getPublicFeedPaginated(int $page = 1, int $limit = 20): array;
+    public function getPublicFeedPaginated(int $page = 1, int $limit = 20, array $filters = [], ?string $sort = null): array;
 
     /**
      * @return Note[]
@@ -44,9 +46,10 @@ interface NoteServiceInterface
 
     /**
      * Get paginated subscriber feed
+     * @param array<string, mixed> $filters
      * @return array{items: Note[], pagination: array{page: int, limit: int, total: int, total_pages: int}}
      */
-    public function getSubscriberFeedPaginated(User $user, int $page = 1, int $limit = 20): array;
+    public function getSubscriberFeedPaginated(User $user, int $page = 1, int $limit = 20, array $filters = [], ?string $sort = null): array;
 
     /**
      * @return Note[]

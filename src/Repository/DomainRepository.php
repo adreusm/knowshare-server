@@ -4,6 +4,8 @@ namespace App\Repository;
 
 use App\Entity\Domain;
 use App\Entity\User;
+use App\Helper\FilterHelper;
+use App\Helper\SortHelper;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\Query;
 use Doctrine\Persistence\ManagerRegistry;
@@ -35,13 +37,40 @@ class DomainRepository extends ServiceEntityRepository
     /**
      * Get query for paginated user domains
      */
-    public function findByUserQuery(User $user): Query
+    public function findByUserQuery(User $user, array $filters = [], ?string $sort = null): Query
     {
-        return $this->createQueryBuilder('d')
+        $qb = $this->createQueryBuilder('d')
             ->andWhere('d.user = :user')
-            ->setParameter('user', $user)
-            ->orderBy('d.created_at', 'DESC')
-            ->getQuery();
+            ->setParameter('user', $user);
+
+        // Apply filters
+        $allowedFilters = [
+            'is_public' => 'd.is_public',
+            'search' => 'd.name',
+        ];
+
+        // Handle search (search in name and description)
+        if (isset($filters['search'])) {
+            $searchTerm = $filters['search'];
+            $qb->andWhere($qb->expr()->orX(
+                $qb->expr()->like('d.name', ':search'),
+                $qb->expr()->like('d.description', ':search')
+            ))
+            ->setParameter('search', '%' . $searchTerm . '%');
+            unset($filters['search']);
+        }
+
+        FilterHelper::applyFilters($qb, $filters, $allowedFilters);
+
+        // Apply sorting
+        $allowedSorts = [
+            'created_at' => 'd.created_at',
+            'updated_at' => 'd.updated_at',
+            'name' => 'd.name',
+        ];
+        SortHelper::applySort($qb, $sort, $allowedSorts);
+
+        return $qb->getQuery();
     }
 
     /**

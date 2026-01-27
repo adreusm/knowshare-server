@@ -104,9 +104,9 @@ class NoteService implements NoteServiceInterface
         return $this->noteRepository->findByUser($user);
     }
 
-    public function getUserNotesPaginated(User $user, int $page = 1, int $limit = 20): array
+    public function getUserNotesPaginated(User $user, int $page = 1, int $limit = 20, array $filters = [], ?string $sort = null): array
     {
-        $query = $this->noteRepository->findByUserQuery($user);
+        $query = $this->noteRepository->findByUserQuery($user, $filters, $sort);
         return PaginationHelper::paginate($query, $page, $limit);
     }
 
@@ -115,9 +115,9 @@ class NoteService implements NoteServiceInterface
         return $this->noteRepository->findPublicNotes($limit, $offset);
     }
 
-    public function getPublicFeedPaginated(int $page = 1, int $limit = 20): array
+    public function getPublicFeedPaginated(int $page = 1, int $limit = 20, array $filters = [], ?string $sort = null): array
     {
-        $query = $this->noteRepository->findPublicNotesQuery();
+        $query = $this->noteRepository->findPublicNotesQuery($filters, $sort);
         return PaginationHelper::paginate($query, $page, $limit);
     }
 
@@ -126,9 +126,9 @@ class NoteService implements NoteServiceInterface
         return $this->noteRepository->findSubscriberNotes($user, $limit, $offset);
     }
 
-    public function getSubscriberFeedPaginated(User $user, int $page = 1, int $limit = 20): array
+    public function getSubscriberFeedPaginated(User $user, int $page = 1, int $limit = 20, array $filters = [], ?string $sort = null): array
     {
-        $query = $this->noteRepository->findSubscriberNotesQuery($user);
+        $query = $this->noteRepository->findSubscriberNotesQuery($user, $filters, $sort);
         return PaginationHelper::paginate($query, $page, $limit);
     }
 

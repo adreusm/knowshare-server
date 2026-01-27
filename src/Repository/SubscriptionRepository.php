@@ -4,6 +4,8 @@ namespace App\Repository;
 
 use App\Entity\Subscription;
 use App\Entity\User;
+use App\Helper\FilterHelper;
+use App\Helper\SortHelper;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\Query;
 use Doctrine\Persistence\ManagerRegistry;
@@ -78,29 +80,57 @@ class SubscriptionRepository extends ServiceEntityRepository
     /**
      * Get query for paginated subscribed authors
      */
-    public function findSubscribedAuthorsQuery(User $subscriber): Query
+    public function findSubscribedAuthorsQuery(User $subscriber, array $filters = [], ?string $sort = null): Query
     {
-        return $this->createQueryBuilder('s')
+        $qb = $this->createQueryBuilder('s')
             ->select('u')
             ->innerJoin('s.author', 'u')
             ->andWhere('s.subscriber = :subscriber')
-            ->setParameter('subscriber', $subscriber)
-            ->orderBy('u.id', 'ASC')
-            ->getQuery();
+            ->setParameter('subscriber', $subscriber);
+
+        // Apply filters
+        $allowedFilters = [
+            'search' => 'u.username',
+        ];
+
+        FilterHelper::applyFilters($qb, $filters, $allowedFilters);
+
+        // Apply sorting
+        $allowedSorts = [
+            'id' => 'u.id',
+            'username' => 'u.username',
+        ];
+        SortHelper::applySort($qb, $sort, $allowedSorts, 'id', 'ASC');
+
+        return $qb->getQuery();
     }
 
     /**
      * Get query for paginated subscribers
      */
-    public function findSubscribersQuery(User $author): Query
+    public function findSubscribersQuery(User $author, array $filters = [], ?string $sort = null): Query
     {
-        return $this->createQueryBuilder('s')
+        $qb = $this->createQueryBuilder('s')
             ->select('u')
             ->innerJoin('s.subscriber', 'u')
             ->andWhere('s.author = :author')
-            ->setParameter('author', $author)
-            ->orderBy('u.id', 'ASC')
-            ->getQuery();
+            ->setParameter('author', $author);
+
+        // Apply filters
+        $allowedFilters = [
+            'search' => 'u.username',
+        ];
+
+        FilterHelper::applyFilters($qb, $filters, $allowedFilters);
+
+        // Apply sorting
+        $allowedSorts = [
+            'id' => 'u.id',
+            'username' => 'u.username',
+        ];
+        SortHelper::applySort($qb, $sort, $allowedSorts, 'id', 'ASC');
+
+        return $qb->getQuery();
     }
 }
 

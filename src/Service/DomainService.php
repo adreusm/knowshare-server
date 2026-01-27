@@ -61,9 +61,9 @@ class DomainService implements DomainServiceInterface
         return $this->domainRepository->findByUser($user);
     }
 
-    public function getUserDomainsPaginated(User $user, int $page = 1, int $limit = 20): array
+    public function getUserDomainsPaginated(User $user, int $page = 1, int $limit = 20, array $filters = [], ?string $sort = null): array
     {
-        $query = $this->domainRepository->findByUserQuery($user);
+        $query = $this->domainRepository->findByUserQuery($user, $filters, $sort);
         return PaginationHelper::paginate($query, $page, $limit);
     }
 

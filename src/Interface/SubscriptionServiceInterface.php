@@ -19,9 +19,10 @@ interface SubscriptionServiceInterface
 
     /**
      * Get paginated subscribed authors
+     * @param array<string, mixed> $filters
      * @return array{items: User[], pagination: array{page: int, limit: int, total: int, total_pages: int}}
      */
-    public function getSubscribedAuthorsPaginated(User $subscriber, int $page = 1, int $limit = 20): array;
+    public function getSubscribedAuthorsPaginated(User $subscriber, int $page = 1, int $limit = 20, array $filters = [], ?string $sort = null): array;
 
     /**
      * @return User[]
@@ -30,9 +31,10 @@ interface SubscriptionServiceInterface
 
     /**
      * Get paginated subscribers
+     * @param array<string, mixed> $filters
      * @return array{items: User[], pagination: array{page: int, limit: int, total: int, total_pages: int}}
      */
-    public function getSubscribersPaginated(User $author, int $page = 1, int $limit = 20): array;
+    public function getSubscribersPaginated(User $author, int $page = 1, int $limit = 20, array $filters = [], ?string $sort = null): array;
 }
 
 

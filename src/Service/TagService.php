@@ -64,9 +64,9 @@ class TagService implements TagServiceInterface
         return $this->tagRepository->findByUser($user);
     }
 
-    public function getUserTagsPaginated(User $user, int $page = 1, int $limit = 20): array
+    public function getUserTagsPaginated(User $user, int $page = 1, int $limit = 20, array $filters = [], ?string $sort = null): array
     {
-        $query = $this->tagRepository->findByUserQuery($user);
+        $query = $this->tagRepository->findByUserQuery($user, $filters, $sort);
         return PaginationHelper::paginate($query, $page, $limit);
     }
 

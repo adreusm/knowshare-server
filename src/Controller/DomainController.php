@@ -87,8 +87,11 @@ class DomainController extends AbstractController
 
         $page = max(1, (int) ($request->query->get('page') ?? 1));
         $limit = max(1, min(100, (int) ($request->query->get('limit') ?? 20)));
+        $sort = $request->query->get('sort');
 
-        $result = $this->domainService->getUserDomainsPaginated($user, $page, $limit);
+        $filters = $this->extractFilters($request, ['is_public', 'search']);
+
+        $result = $this->domainService->getUserDomainsPaginated($user, $page, $limit, $filters, $sort);
         $data = array_map(fn(Domain $domain) => [
             'id' => $domain->getId(),
             'name' => $domain->getName(),
@@ -349,6 +352,27 @@ class DomainController extends AbstractController
         $this->domainService->deleteDomain($domain);
 
         return new JsonResponse(null, Response::HTTP_NO_CONTENT);
+    }
+
+    /**
+     * Extract filters from request
+     * @param array<string> $allowedFilters
+     * @return array<string, mixed>
+     */
+    private function extractFilters(Request $request, array $allowedFilters): array
+    {
+        $filters = [];
+        foreach ($allowedFilters as $filterKey) {
+            $value = $request->query->get($filterKey);
+            if ($value !== null && $value !== '') {
+                if ($filterKey === 'is_public') {
+                    $filters[$filterKey] = filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+                } else {
+                    $filters[$filterKey] = $value;
+                }
+            }
+        }
+        return $filters;
     }
 }
 

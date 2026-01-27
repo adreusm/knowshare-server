@@ -94,8 +94,11 @@ class NoteController extends AbstractController
 
         $page = max(1, (int) ($request->query->get('page') ?? 1));
         $limit = max(1, min(100, (int) ($request->query->get('limit') ?? 20)));
+        $sort = $request->query->get('sort');
 
-        $result = $this->noteService->getUserNotesPaginated($user, $page, $limit);
+        $filters = $this->extractFilters($request, ['domain_id', 'access_type', 'tag_id']);
+
+        $result = $this->noteService->getUserNotesPaginated($user, $page, $limit, $filters, $sort);
         $data = array_map(fn(Note $note) => $this->serializeNote($note), $result['items']);
 
         return new JsonResponse([
@@ -122,6 +125,36 @@ class NoteController extends AbstractController
         in: 'query',
         schema: new OA\Schema(type: 'integer', default: 20, minimum: 1, maximum: 100),
         description: 'Number of items per page'
+    )]
+    #[OA\Parameter(
+        name: 'sort',
+        in: 'query',
+        schema: new OA\Schema(type: 'string', default: '-created_at', example: '-created_at'),
+        description: 'Sort field and direction. Use "-" prefix for descending (e.g., "-created_at", "title")'
+    )]
+    #[OA\Parameter(
+        name: 'domain_id',
+        in: 'query',
+        schema: new OA\Schema(type: 'integer'),
+        description: 'Filter by domain ID'
+    )]
+    #[OA\Parameter(
+        name: 'author_id',
+        in: 'query',
+        schema: new OA\Schema(type: 'integer'),
+        description: 'Filter by author ID'
+    )]
+    #[OA\Parameter(
+        name: 'tag_id',
+        in: 'query',
+        schema: new OA\Schema(type: 'integer'),
+        description: 'Filter by tag ID'
+    )]
+    #[OA\Parameter(
+        name: 'search',
+        in: 'query',
+        schema: new OA\Schema(type: 'string'),
+        description: 'Search in title and content'
     )]
     #[OA\Response(
         response: 200,
@@ -168,8 +201,11 @@ class NoteController extends AbstractController
         // Public feed is accessible without authentication
         $page = max(1, (int) ($request->query->get('page') ?? 1));
         $limit = max(1, min(100, (int) ($request->query->get('limit') ?? 20)));
+        $sort = $request->query->get('sort');
 
-        $result = $this->noteService->getPublicFeedPaginated($page, $limit);
+        $filters = $this->extractFilters($request, ['domain_id', 'author_id', 'tag_id', 'search']);
+
+        $result = $this->noteService->getPublicFeedPaginated($page, $limit, $filters, $sort);
         $data = array_map(fn(Note $note) => $this->serializeNote($note), $result['items']);
 
         return new JsonResponse([
@@ -562,6 +598,28 @@ class NoteController extends AbstractController
                 'username' => $note->getUser()?->getUsername(),
             ],
         ];
+    }
+
+    /**
+     * Extract filters from request
+     * @param array<string> $allowedFilters
+     * @return array<string, mixed>
+     */
+    private function extractFilters(Request $request, array $allowedFilters): array
+    {
+        $filters = [];
+        foreach ($allowedFilters as $filterKey) {
+            $value = $request->query->get($filterKey);
+            if ($value !== null && $value !== '') {
+                // Convert to integer if it looks like a number
+                if (is_numeric($value) && !str_contains((string)$value, '.')) {
+                    $filters[$filterKey] = (int) $value;
+                } else {
+                    $filters[$filterKey] = $value;
+                }
+            }
+        }
+        return $filters;
     }
 }
 

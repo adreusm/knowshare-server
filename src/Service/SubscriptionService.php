@@ -67,9 +67,9 @@ class SubscriptionService implements SubscriptionServiceInterface
         return $authors;
     }
 
-    public function getSubscribedAuthorsPaginated(User $subscriber, int $page = 1, int $limit = 20): array
+    public function getSubscribedAuthorsPaginated(User $subscriber, int $page = 1, int $limit = 20, array $filters = [], ?string $sort = null): array
     {
-        $query = $this->subscriptionRepository->findSubscribedAuthorsQuery($subscriber);
+        $query = $this->subscriptionRepository->findSubscribedAuthorsQuery($subscriber, $filters, $sort);
         return PaginationHelper::paginate($query, $page, $limit);
     }
 
@@ -87,9 +87,9 @@ class SubscriptionService implements SubscriptionServiceInterface
         return $subscribers;
     }
 
-    public function getSubscribersPaginated(User $author, int $page = 1, int $limit = 20): array
+    public function getSubscribersPaginated(User $author, int $page = 1, int $limit = 20, array $filters = [], ?string $sort = null): array
     {
-        $query = $this->subscriptionRepository->findSubscribersQuery($author);
+        $query = $this->subscriptionRepository->findSubscribersQuery($author, $filters, $sort);
         return PaginationHelper::paginate($query, $page, $limit);
     }
 }

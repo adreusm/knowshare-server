@@ -79,8 +79,11 @@ class SubscriptionController extends AbstractController
 
         $page = max(1, (int) ($request->query->get('page') ?? 1));
         $limit = max(1, min(100, (int) ($request->query->get('limit') ?? 20)));
+        $sort = $request->query->get('sort');
 
-        $result = $this->subscriptionService->getSubscribedAuthorsPaginated($user, $page, $limit);
+        $filters = $this->extractFilters($request, ['search']);
+
+        $result = $this->subscriptionService->getSubscribedAuthorsPaginated($user, $page, $limit, $filters, $sort);
         $data = array_map(fn(User $author) => [
             'id' => $author->getId(),
             'username' => $author->getUsername(),
@@ -147,8 +150,11 @@ class SubscriptionController extends AbstractController
 
         $page = max(1, (int) ($request->query->get('page') ?? 1));
         $limit = max(1, min(100, (int) ($request->query->get('limit') ?? 20)));
+        $sort = $request->query->get('sort');
 
-        $result = $this->subscriptionService->getSubscribersPaginated($user, $page, $limit);
+        $filters = $this->extractFilters($request, ['search']);
+
+        $result = $this->subscriptionService->getSubscribersPaginated($user, $page, $limit, $filters, $sort);
         $data = array_map(fn(User $subscriber) => [
             'id' => $subscriber->getId(),
             'username' => $subscriber->getUsername(),
@@ -257,6 +263,23 @@ class SubscriptionController extends AbstractController
         }
 
         return new JsonResponse(null, Response::HTTP_NO_CONTENT);
+    }
+
+    /**
+     * Extract filters from request
+     * @param array<string> $allowedFilters
+     * @return array<string, mixed>
+     */
+    private function extractFilters(Request $request, array $allowedFilters): array
+    {
+        $filters = [];
+        foreach ($allowedFilters as $filterKey) {
+            $value = $request->query->get($filterKey);
+            if ($value !== null && $value !== '') {
+                $filters[$filterKey] = $value;
+            }
+        }
+        return $filters;
     }
 }
 

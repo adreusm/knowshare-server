@@ -22,9 +22,10 @@ interface TagServiceInterface
 
     /**
      * Get paginated user tags
+     * @param array<string, mixed> $filters
      * @return array{items: Tag[], pagination: array{page: int, limit: int, total: int, total_pages: int}}
      */
-    public function getUserTagsPaginated(User $user, int $page = 1, int $limit = 20): array;
+    public function getUserTagsPaginated(User $user, int $page = 1, int $limit = 20, array $filters = [], ?string $sort = null): array;
 
     public function getTagById(User $user, int $id): ?Tag;
 }

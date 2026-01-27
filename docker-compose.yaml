@@ -6,11 +6,54 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: 12345
       POSTGRES_HOST_AUTH_METHOD: trust
+      POSTGRES_DB: knowshare
     ports:
       - "5432:5432"
     volumes:
       - database_data:/var/lib/postgresql/data:rw
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  php:
+    container_name: php-fpm
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+    volumes:
+      - .:/var/www/html:rw
+      - ./docker/php/php.ini:/usr/local/etc/php/php.ini:ro
+    networks:
+      - app-network
+    depends_on:
+      database:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: "postgresql://postgres:12345@database:5432/knowshare?serverVersion=17&charset=utf8"
+
+  nginx:
+    container_name: nginx
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - .:/var/www/html:ro
+      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    networks:
+      - app-network
+    depends_on:
+      - php
 
 volumes:
   database_data:
+
+networks:
+  app-network:
+    driver: bridge
 
