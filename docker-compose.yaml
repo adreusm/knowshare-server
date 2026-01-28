@@ -3,10 +3,10 @@ services:
     container_name: postgres
     image: postgres:17-alpine
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 12345
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_HOST_AUTH_METHOD: trust
-      POSTGRES_DB: knowshare
+      POSTGRES_DB: ${DB_NAME}
     ports:
       - "5432:5432"
     volumes:
@@ -33,7 +33,7 @@ services:
       database:
         condition: service_healthy
     environment:
-      DATABASE_URL: "postgresql://postgres:12345@database:5432/knowshare?serverVersion=17&charset=utf8"
+      DATABASE_URL: ${DATABASE_URL}
 
   nginx:
     container_name: nginx
