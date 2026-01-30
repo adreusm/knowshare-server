@@ -30,15 +30,14 @@ class SortHelper
             $field = substr($sortField, 1);
         }
 
-        // Validate field
+        // Validate field and resolve to DQL field (with entity alias)
         if (!$field || !isset($allowedFields[$field])) {
             $field = $defaultSort;
             $direction = $defaultDirection;
-        } else {
-            $field = $allowedFields[$field];
         }
+        $dqlField = $allowedFields[$field] ?? $field;
 
-        $qb->orderBy($field, $direction);
+        $qb->orderBy($dqlField, $direction);
     }
 }
 

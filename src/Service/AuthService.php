@@ -33,6 +33,7 @@ class AuthService implements AuthServiceInterface
         $user->setUsername($registerRequest->username);
         $user->setEmail($registerRequest->email);
         $user->setPassword($this->passwordHasher->hashPassword($user, $registerRequest->password));
+        $user->setRoles(['ROLE_USER']);
 
         $this->entityManager->persist($user);
         $this->entityManager->flush();

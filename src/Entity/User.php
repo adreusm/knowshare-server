@@ -32,6 +32,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     private ?\DateTimeImmutable $updated_at = null;
 
+    /**
+     * @var string[] Roles stored in DB, e.g. ['ROLE_USER'] or ['ROLE_USER', 'ROLE_ADMIN']
+     */
+    #[ORM\Column(type: 'json')]
+    private array $roles = ['ROLE_USER'];
+
     public function getId(): ?int
     {
         return $this->id;
@@ -118,7 +124,21 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function getRoles(): array
     {
-        return ['ROLE_USER'];
+        $roles = $this->roles;
+        // guarantee ROLE_USER for every user
+        if (!in_array('ROLE_USER', $roles, true)) {
+            $roles[] = 'ROLE_USER';
+        }
+        return array_unique($roles);
+    }
+
+    /**
+     * @param string[] $roles
+     */
+    public function setRoles(array $roles): static
+    {
+        $this->roles = $roles;
+        return $this;
     }
 
     public function eraseCredentials(): void
