@@ -37,14 +37,14 @@ docker compose --env-file .env.local up -d --build
 ```
 
 4. Установите зависимости:
-  1. Development:
-```bash
-docker exec -it php-fpm composer install --no-interaction
-```
-  2. Production: 
-```bash
-docker exec -it php-fpm composer install --no-dev --optimize-autoloader
-```  
+    - Development:
+        ```bash
+        docker exec -it php-fpm composer install --no-interaction
+        ```
+    - Production: 
+        ```bash
+        docker exec -it php-fpm composer install --no-dev --optimize-autoloader
+        ```  
 
 5. Создайте базу данных:
 ```bash
