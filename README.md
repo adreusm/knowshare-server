@@ -26,34 +26,38 @@ git clone <repository-url>
 cd knowshare-server
 ```
 
-2. Установите переменные окружения:
+2. Скопируйте файл окружения и пропишите свои данные:
 ```bash
-export DB_USER=postgres
-export DB_PASSWORD=12345
-export DB_NAME=knowshare
-export DATABASE_URL="postgresql://${DB_USER}:${DB_PASSWORD}@database:5432/${DB_NAME}?serverVersion=17&charset=utf8"
+cp .env .env.local
 ```
 
 3. Запустите docker:
 ```bash
-docker compose up -d --build
+docker compose --env-file .env.local up -d --build
 ```
 
-4. Создайте базу данных:
+4. Установите зависимости:
+  1. Development:
 ```bash
-docker exec -it php-fpm php bin/console doctrine:database:create
+docker exec -it php-fpm composer install --no-interaction
+```
+  2. Production: 
+```bash
+docker exec -it php-fpm composer install --no-dev --optimize-autoloader
+```  
+
+5. Создайте базу данных:
+```bash
+docker exec -it php-fpm php bin/console doctrine:database:create --if-not-exists
 ```
 
-5. Выполните миграции:
+6. Выполните миграции:
 ```bash
 docker exec -it php-fpm php bin/console doctrine:migrations:migrate
 ```
 
-6. Сгенерируйте JWT ключи (если еще не созданы):
+7. Сгенерируйте JWT ключи (если еще не созданы):
 ```bash
-docker exec -it php-fpm php bin/console lexik:jwt:generate-keypair
+docker exec -it php-fpm php bin/console lexik:jwt:generate-keypair --overwrite
 ```
-
-API будет доступен по адресу: `http://localhost/api/v1/doc`
-
-
+ 
