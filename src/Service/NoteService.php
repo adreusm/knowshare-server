@@ -6,14 +6,12 @@ use App\DTO\CreateNoteRequest;
 use App\DTO\UpdateNoteRequest;
 use App\Entity\Domain;
 use App\Entity\Note;
-use App\Entity\NoteTag;
 use App\Entity\Tag;
 use App\Entity\User;
 use App\Helper\PaginationHelper;
 use App\Interface\NoteServiceInterface;
 use App\Repository\DomainRepository;
 use App\Repository\NoteRepository;
-use App\Repository\NoteTagRepository;
 use App\Repository\TagRepository;
 use Doctrine\ORM\EntityManagerInterface;
 
@@ -23,7 +21,6 @@ class NoteService implements NoteServiceInterface
         private NoteRepository $noteRepository,
         private DomainRepository $domainRepository,
         private TagRepository $tagRepository,
-        private NoteTagRepository $noteTagRepository,
         private EntityManagerInterface $entityManager
     ) {
     }
@@ -76,13 +73,7 @@ class NoteService implements NoteServiceInterface
 
         // Update tags if provided
         if ($request->tag_ids !== null) {
-            // Remove existing tags
-            foreach ($note->getNoteTags() as $noteTag) {
-                $this->entityManager->remove($noteTag);
-            }
-            $note->getNoteTags()->clear();
-
-            // Add new tags
+            $note->getTags()->clear();
             if (!empty($request->tag_ids)) {
                 $this->attachTagsToNote($note, $note->getUser(), $request->tag_ids);
             }
@@ -151,10 +142,7 @@ class NoteService implements NoteServiceInterface
         foreach ($tagIds as $tagId) {
             $tag = $this->tagRepository->findOneByIdAndUser($tagId, $user);
             if ($tag) {
-                $noteTag = new NoteTag();
-                $noteTag->setNote($note);
-                $noteTag->setTag($tag);
-                $this->entityManager->persist($noteTag);
+                $note->addTag($tag);
             }
         }
     }

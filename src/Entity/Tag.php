@@ -28,12 +28,12 @@ class Tag
     #[ORM\Column]
     private ?\DateTimeImmutable $created_at = null;
 
-    #[ORM\OneToMany(targetEntity: NoteTag::class, mappedBy: 'tag', orphanRemoval: true)]
-    private Collection $noteTags;
+    #[ORM\ManyToMany(targetEntity: Note::class, mappedBy: 'tags')]
+    private Collection $notes;
 
     public function __construct()
     {
-        $this->noteTags = new ArrayCollection();
+        $this->notes = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -75,30 +75,11 @@ class Tag
     }
 
     /**
-     * @return Collection<int, NoteTag>
+     * @return Collection<int, Note>
      */
-    public function getNoteTags(): Collection
+    public function getNotes(): Collection
     {
-        return $this->noteTags;
-    }
-
-    public function addNoteTag(NoteTag $noteTag): static
-    {
-        if (!$this->noteTags->contains($noteTag)) {
-            $this->noteTags->add($noteTag);
-            $noteTag->setTag($this);
-        }
-        return $this;
-    }
-
-    public function removeNoteTag(NoteTag $noteTag): static
-    {
-        if ($this->noteTags->removeElement($noteTag)) {
-            if ($noteTag->getTag() === $this) {
-                $noteTag->setTag(null);
-            }
-        }
-        return $this;
+        return $this->notes;
     }
 
     #[ORM\PrePersist]

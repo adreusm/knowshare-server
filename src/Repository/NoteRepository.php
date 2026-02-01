@@ -48,8 +48,7 @@ class NoteRepository extends ServiceEntityRepository
         $tagFilter = null;
         if (isset($filters['tag_id'])) {
             $tagFilter = $filters['tag_id'];
-            $qb->innerJoin('n.noteTags', 'nt')
-               ->innerJoin('nt.tag', 't');
+            $qb->innerJoin('n.tags', 't');
             unset($filters['tag_id']);
         }
 
@@ -121,8 +120,7 @@ class NoteRepository extends ServiceEntityRepository
         $tagFilter = null;
         if (isset($filters['tag_id'])) {
             $tagFilter = $filters['tag_id'];
-            $qb->innerJoin('n.noteTags', 'nt')
-               ->innerJoin('nt.tag', 't');
+            $qb->innerJoin('n.tags', 't');
             unset($filters['tag_id']);
         }
 
@@ -197,8 +195,7 @@ class NoteRepository extends ServiceEntityRepository
         $tagFilter = null;
         if (isset($filters['tag_id'])) {
             $tagFilter = $filters['tag_id'];
-            $qb->innerJoin('n.noteTags', 'nt')
-               ->innerJoin('nt.tag', 't');
+            $qb->innerJoin('n.tags', 't');
             unset($filters['tag_id']);
         }
 

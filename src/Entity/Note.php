@@ -21,7 +21,7 @@ class Note
     #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     private ?User $user = null;
 
-    #[ORM\ManyToOne(targetEntity: Domain::class)]
+    #[ORM\ManyToOne(targetEntity: Domain::class, inversedBy: 'notes')]
     #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     private ?Domain $domain = null;
 
@@ -40,12 +40,13 @@ class Note
     #[ORM\Column]
     private ?\DateTimeImmutable $updated_at = null;
 
-    #[ORM\OneToMany(targetEntity: NoteTag::class, mappedBy: 'note', orphanRemoval: true)]
-    private Collection $noteTags;
+    #[ORM\ManyToMany(targetEntity: Tag::class, inversedBy: 'notes')]
+    #[ORM\JoinTable(name: 'note_tags')]
+    private Collection $tags;
 
     public function __construct()
     {
-        $this->noteTags = new ArrayCollection();
+        $this->tags = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -131,43 +132,25 @@ class Note
     }
 
     /**
-     * @return Collection<int, NoteTag>
-     */
-    public function getNoteTags(): Collection
-    {
-        return $this->noteTags;
-    }
-
-    public function addNoteTag(NoteTag $noteTag): static
-    {
-        if (!$this->noteTags->contains($noteTag)) {
-            $this->noteTags->add($noteTag);
-            $noteTag->setNote($this);
-        }
-        return $this;
-    }
-
-    public function removeNoteTag(NoteTag $noteTag): static
-    {
-        if ($this->noteTags->removeElement($noteTag)) {
-            if ($noteTag->getNote() === $this) {
-                $noteTag->setNote(null);
-            }
-        }
-        return $this;
-    }
-
-    /**
-     * Get tags associated with this note
      * @return Collection<int, Tag>
      */
     public function getTags(): Collection
     {
-        $tags = new ArrayCollection();
-        foreach ($this->noteTags as $noteTag) {
-            $tags->add($noteTag->getTag());
+        return $this->tags;
+    }
+
+    public function addTag(Tag $tag): static
+    {
+        if (!$this->tags->contains($tag)) {
+            $this->tags->add($tag);
         }
-        return $tags;
+        return $this;
+    }
+
+    public function removeTag(Tag $tag): static
+    {
+        $this->tags->removeElement($tag);
+        return $this;
     }
 
     #[ORM\PrePersist]
