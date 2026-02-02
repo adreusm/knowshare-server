@@ -1,9 +1,12 @@
 nelmio_cors:
     defaults:
-        allow_origin: ['https://knowshare.ru', 'https://www.knowshare.ru']
+        origin_regex: true
+        allow_origin: ['http://knowshare.ru', 'http://www.knowshare.ru', 'https://knowshare.ru', 'https://www.knowshare.ru']
         allow_methods: ['GET', 'OPTIONS', 'POST', 'PUT', 'PATCH', 'DELETE']
-        allow_headers: ['Content-Type', 'Authorization']
+        allow_headers: ['Content-Type', 'Authorization', 'X-Requested-With']
         expose_headers: ['Link']
         max_age: 3600
+        allow_credentials: true  
     paths:
-        '^/': null
+        '^/api/': ~
+        '^/': ~
